@@ -1,11 +1,6 @@
 # Infrared Receiver Signal Chain
 
-Four-stage discrete receiver for 38 kHz-modulated IR remote signals — the job an
-integrated TSOP module does in one package, built stage by stage so each design
-decision is visible. The KiCad revision builds all four stages from sections of a
-single LM324. The latest LTspice draft (Draft 3) moves the comparator to an LT1011
-with hysteresis and drives a 3.3 V logic output for an ESP32 decoder; see
-[What's new in Draft 3](#whats-new-in-draft-3).
+A discrete 38kHz IR Reciever, 4 fundamental analog stages followed by a fixed DSP decoder.
 
 ## Repository layout
 
