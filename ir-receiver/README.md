@@ -28,6 +28,6 @@ Photodiode → Transimpedance amp → 38 kHz bandpass → Comparator → Output 
 
 ## Schematic
 
-![IR receiver schematic](ir-receiver/docs/draft5_servo_schema.png)
+![IR receiver schematic sim in LTSPICE](docs/draft5_servo_schema.png)
 
 
