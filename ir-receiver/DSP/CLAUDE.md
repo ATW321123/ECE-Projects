@@ -28,12 +28,14 @@ Write-up of the 2026-09-25 simulation study: `RESULTS.md`.
   - `gz_run.c`, `ir_run.c`: host test drivers, `-iq` selects I/Q (`*.exe` are build outputs).
 - `test_goertzel_fixed.py` — table generator + build; checks Goertzel bit-exact vs an integer model and vs float.
 - `test_iq_fixed.py` — I/Q detector bit-exact vs integer model, vs a float model of the same
-  structure, and decodes (incl. `../sim/exports/Draft5_servo_allnoises.txt`, where Goertzel fails).
+  structure, and decodes (pass `../sim/exports/Draft5_allnoises_fixed.txt` for the all-noises run).
 - `test_ir_rx.py` — C receiver end to end vs the Python pipeline (frames + slicer bit agreement).
 - `sweep_fixed.py` — decode-rate chart `decode_rate.png` (data in `out/decode_rate.json`).
 - `demo.py` — one-figure pipeline demo `demo.png` (ADC codes → C envelope + threshold →
   slicer bits with decoded bytes); `python demo.py <export> [--detector iq] --out x.png`.
   `demo_goertzel_allnoises.png` / `demo_iq_allnoises.png` are the side-by-side failure/success pair.
+- `comparator_demo.py` — `comparator_allnoises.png`: comparator V(out) in silence vs during the
+  leader (same 45 kHz switching in both → the analog path's failure).
 - `nec_0x04_0x08.pwl` (100 nA), `nec_20nA.pwl` — NEC photocurrent stimuli for LTspice.
 - LTspice working schematics live in `../sim/drafts/` (Draft3_nec, Draft4_gain*, Draft5_servo*; PWL paths are
   relative, `..\..\DSP\*.pwl`); their waveform exports live in `../sim/exports/` (gitignored, 6-48 MB each).
@@ -71,9 +73,14 @@ LTspice setup: `I1 +5V TIA_IN PWL file=nec.pwl` in parallel with the BPW34 model
 - DSP decodes the LTspice NEC frame at 100 nA and 20 nA (all three demodulators).
 - Sweep (10 trials/point, `sweep_fixed.py`): all methods 100% from 20 nA clean; with a
   100 nA 45 kHz interferer, I/Q (C and float) and FIR from 20 nA, Goertzel from 30 nA.
-- `../sim/exports/Draft5_servo_allnoises.txt` (exported without an extension, renamed; 20 nA remote + 1 µA + 120 Hz flicker +
-  100 nA @45 kHz + white noise, full 140 ms): Goertzel (C and float) decodes NOTHING —
-  45 kHz leakage lifts the floor to ~2 codes, peak/floor 3.16 < SNR gate 4. I/Q (C) decodes it.
+- `../sim/exports/Draft5_allnoises_fixed.txt` (2026-09-25; CORRECT photocurrent polarity, all
+  sources VDD→TIA input, U1 on VDD, no servo, one band-pass + ×10; 20 nA remote + 1 µA +
+  2 µA ± 1 µA @120 Hz + SINE(100n 100n 45k) + white noise, 140 ms; converted from
+  `sim/drafts/Draft5_servo.raw`): V(tia) 1.02–1.75 V, no clipping. Comparator: nothing
+  (≈90 edges/ms = 45 kHz, silence and leader alike). Goertzel (C and float): nothing
+  (floor ~2 codes, peak ~6.5, peak/floor ≈ 3 < gate 4). I/Q (C, bit-exact) and float FIR:
+  0x04/0x08 + REPEAT. `Draft5_servo_allnoises.txt` is the older reversed-polarity run
+  (same outcomes).
 - Goertzel N=64 only gave −4.6 dB at 45 kHz → false triggers; N=128 gives −25 dB.
 - Fixed-point C = float: Goertzel bit-exact vs integer model (≤0.16 code vs float),
   slicer 100% bit agreement, identical decoded frames on every test input.
@@ -101,7 +108,10 @@ LTspice setup: `I1 +5V TIA_IN PWL file=nec.pwl` in parallel with the BPW34 model
   (`I1 N002 VDD` pulls current OUT of the TIA input). The PCB has D1 cathode → VDD,
   anode → U1 pin 2 (checked in the .kicad_pcb), so real light pushes current IN and the
   TIA output goes DOWN from ~2.5 V toward 0 V. Model the diode as `I VDD <tia_in> ...`.
-  AC/carrier results (comparator, DSP decodes) don't depend on the sign.
+  AC/carrier results (comparator, DSP decodes) don't depend on the sign. FIXED in
+  `sim/drafts/Draft5_servo` on 2026-09-25 (all 5 sources flipped, U1 V+ back on VDD);
+  the other drafts still have the reversed source. Recurring user wiring error: U1's V+ pin
+  ends up on VDC/Vt instead of VDD → TIA pinned at ~1 V, V(out) constant; check it first.
 - TIA saturates at ~7.5 µA DC photocurrent (2.5 V headroom down to ~0 V / 330k) — the
   original estimate was right. A "3.3 µA / 48% clipped" result recorded on 2026-09-25 came
   from the reversed source and is WRONG for the real board; with the real polarity,

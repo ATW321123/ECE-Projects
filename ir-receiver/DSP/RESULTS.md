@@ -19,7 +19,7 @@ No hardware has been built yet.
 | Original circuit, 100 nA remote | fails: never switches | decodes | decodes |
 | After analog fixes, 20 nA remote | decodes | decodes | decodes |
 | 100 nA lamp interferer at 45 kHz | false-triggers continuously | decodes from 30 nA | decodes from 20 nA |
-| All noise sources at once, 20 nA remote (LTspice) | not tested | **fails** | **decodes** |
+| All noise sources at once, 20 nA remote (LTspice) | **fails**: toggles at 45 kHz throughout | **fails** | **decodes** |
 | 45 kHz rejection relative to 38 kHz | 7.4 dB (one band-pass), ~15 dB (two) | ~25 dB | ~70 dB |
 | Arithmetic | — | 64-bit products | 16×16→32-bit only |
 
@@ -78,17 +78,24 @@ No hardware has been built yet.
 
 ## Goertzel vs I/Q under combined interference
 
-The hardest LTspice run combined a 20 nA remote with 1 µA of steady light,
-2 µA ± 1 µA of 120 Hz flicker, a 100 nA 45 kHz interferer and ~1.4 nA rms of
-broadband noise, on the servo circuit. (This run used the reversed
-photocurrent source; the detectors only see the AC carrier, whose sign does not
-matter, so the Goertzel vs I/Q comparison stands. It has not been re-run with
-the real polarity.)
+The hardest LTspice run (`Draft5_allnoises_fixed.txt`) combined a 20 nA
+remote with 1 µA of steady light, 2 µA ± 1 µA of 120 Hz flicker, a 45 kHz
+interferer swinging 0–200 nA (100 nA amplitude) and ~1.4 nA rms of broadband
+noise. The circuit is the ×10-gain version with one band-pass and no servo, with
+every source injecting in the real photodiode direction. V(tia) stays within
+1.02–1.75 V, so nothing clips; the difference between the paths is purely how
+well each rejects the 45 kHz interferer. (An earlier run with the source
+reversed gave the same three outcomes.)
+
+- **The comparator fails.** Its output switches at ~90 edges/ms (45 kHz) in
+  silence and during the 9 ms leader alike, so the remote is invisible in it.
+  The band-pass passes the 100 nA interferer at a larger amplitude than the
+  20 nA remote, and no threshold can separate them.
 
 - **Goertzel fails.** Its 128-sample (256 µs) window cannot separate 38 kHz
   from 45 kHz well: about 5% of the interferer leaks through, which lifts the
-  envelope floor to ~2 codes against ~6-code peaks. The slicer's 4× SNR gate
-  never opens (peak/floor reached 3.16). Lowering the gate only recovers the
+  envelope floor to ~2 codes against ~6.5-code peaks. The slicer's 4× SNR gate
+  never opens (peak/floor ≈ 3). Lowering the gate only recovers the
   repeat code, because 38/45 kHz beating breaks up the bursts. The float
   Goertzel fails identically, so this is the algorithm's limit, not the port's.
 - **I/Q decodes it.** The firmware version mixes to baseband with a 250-entry
@@ -102,8 +109,51 @@ the real polarity.)
   codes of a float model of the same structure. In the sweep it matches or
   beats the 255-tap reference at every level.
 
-![Goertzel on the all-noises run](demo_goertzel_allnoises.png)
+![Comparator on the all-noises run](comparator_allnoises.png)
+![Goertzel on the same run](demo_goertzel_allnoises.png)
 ![I/Q on the same run](demo_iq_allnoises.png)
+
+## Interferer frequency sweep (LTspice)
+
+Same circuit and noise as above, one variable changed per run (`sim/drafts/Draft6_*.asc`).
+"Ratio" is the Goertzel envelope's leader peak over its silent floor; the slicer needs ≥ 4.
+
+| Run | Comparator | Goertzel (C) | I/Q (C) |
+|---|---|---|---|
+| 45 kHz interferer (baseline) | fails (45 kHz switching) | fails (ratio 3.1) | decodes |
+| 60 kHz interferer | fails (60 kHz switching) | **decodes** (floor < 0.1 code) | decodes |
+| 100 kHz interferer | decodes | decodes | decodes |
+| No interferer | decodes | decodes | decodes |
+| 45 kHz, flicker 60 Hz / 100 Hz instead of 120 Hz | fails | fails (ratio 3.0 / 3.1) | decodes |
+
+The Goertzel's weakness is specifically an interferer inside its Hann main lobe
+(±2 bins = ±7.8 kHz around 38 kHz); at 22 kHz away it is fine. The flicker
+frequency does not matter to any path. The comparator survives only when the
+analog band-pass and the TIA's ~103 kHz pole remove the interferer (100 kHz).
+
+![Goertzel with a 60 kHz interferer](demo_goertzel_int60k.png)
+
+## Where to put the ADC: TIA vs band-pass vs ×10 output
+
+Same six LTspice runs, same C firmware, ADC moved along the analog chain
+(values from the `.raw` files; "ratio" = Goertzel leader peak / silent floor, gate ≥ 4).
+
+| Tap point | Carrier at ADC | 45 kHz run: Goertzel | 45 kHz run: I/Q | Notes |
+|---|---|---|---|---|
+| TIA output | ~4.5 codes | fails (ratio 3.1) | decodes | flicker ±410 codes dominates the ADC range |
+| Band-pass output | ~24 codes | **decodes (ratio 5.9)** | decodes | 2.40–2.59 V, flicker gone |
+| ×10 output | ~226 codes | decodes (ratio 5.9) | decodes | 1.63–3.35 V: exceeds a 3.3 V ADC 0.6% of the time |
+
+All other runs (60 kHz, 100 kHz, no interferer, 60/100 Hz flicker) decode on every
+path at every tap. The analog band-pass's few dB of extra 45 kHz rejection is
+enough to lift the Goertzel over its SNR gate; the ×10 stage adds amplitude but no
+selectivity, so it does not improve the ratio further. I/Q's peak/floor stays
+~70 at every tap because the white noise is amplified along with the signal. A
+larger carrier still matters on hardware, where real ADC noise (not modelled here)
+is a code or more. The ×10 output needs rescaling (and centring at ~1.65 V) for a
+3.3 V ADC.
+
+![Goertzel decoding the 45 kHz all-noises run from the band-pass output](demo_goertzel_bpf_allnoises.png)
 
 ## Limits of this study
 
@@ -128,7 +178,9 @@ python test_ir_rx.py            # C receiver end to end vs the Python pipeline
 python test_iq_fixed.py         # C I/Q detector: bit-exact + float + decodes
 python sweep_fixed.py           # decode-rate chart (decode_rate.png)
 python demo.py                  # pipeline figure (demo.png) from ../sim/exports/Draft4_gain_20nA.txt
-python demo.py ../sim/exports/Draft5_servo_allnoises.txt --detector iq --out demo_iq_allnoises.png
+python demo.py ../sim/exports/Draft5_allnoises_fixed.txt --detector iq --out demo_iq_allnoises.png
+python demo.py ../sim/exports/Draft5_allnoises_fixed.txt --detector goertzel --out demo_goertzel_allnoises.png
+python comparator_demo.py       # comparator figure (comparator_allnoises.png) from the same run
 ```
 The tests build with MSYS2 GCC (`C:/msys64/ucrt64/bin/gcc.exe`, or set `GCC`).
 LTspice exports are read from `../sim/exports/Draft*.txt` (gitignored; re-export from `../sim/drafts/*.asc`).

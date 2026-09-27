@@ -93,7 +93,8 @@ def main():
     ax[0].set_ylim(lo - 1.25 * span, hi + 0.15 * span)     # trace on top, inset below
     ax[0].yaxis.set_major_locator(plt.MaxNLocator(6, integer=True))
     ax[0].set_ylabel("ADC code")
-    ax[0].set_title("1  TIA output, sampled by a 12-bit ADC at 500 kSPS", loc="left", fontsize=11)
+    where = {"V(tia)": "TIA output", "V(bpf)": "Band-pass output"}.get(a.node, a.node)
+    ax[0].set_title(f"1  {where}, sampled by a 12-bit ADC at 500 kSPS", loc="left", fontsize=11)
 
     lead = [f for f in frames if not f["repeat"]]
     if lead:
