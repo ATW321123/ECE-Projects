@@ -113,12 +113,11 @@ built-in device noise (resistor, op-amp or photodiode shot noise); B1 stands in 
 
 ## Sim Results
 
-Different simulations running assuming a 38kHz signal strength of 20nA from photodiode
+Different simulations running assuming a 38kHz signal strength of 20nA from photodiode. With no interference from other sources, the comparator decodes the frame cleanly. Adding room lights, flickers, and noise did not break it either. A 45kHz source however does and passes through the analog bandpass filter along with the 38kHz remote signal and results in a failure to decode.
 Results from the final 'out' node given just the comparator.
 ![Comparitor without any noises](ir-receiver/DSP/comparator_clean.png)
 ![Comparator with All Noises](ir-receiver/DSP/comparator_allnoises.png)
 
-The circuit works with no noise and background light, which is pretty unrealistic, and after adding a variety of different noises (simulated as various current sources in parallel witht he diode to simulate light flickering, other signals, etc.), it is unable to decode any instruction. 
 
 ## Goertzel Algorithm Implementation
 
