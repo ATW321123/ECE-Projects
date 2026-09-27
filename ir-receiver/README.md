@@ -115,15 +115,15 @@ built-in device noise (resistor, op-amp or photodiode shot noise); B1 stands in 
 
 Different simulations running assuming a 38kHz signal strength of 20nA from photodiode. With no interference from other sources, the comparator decodes the frame cleanly. Adding room lights, flickers, and noise did not break it either. A 45kHz source however does and passes through the analog bandpass filter along with the 38kHz remote signal and results in a failure to decode.
 Results from the final 'out' node given just the comparator.
-![Comparitor without any noises](ir-receiver/DSP/comparator_clean.png)
-![Comparator with All Noises](ir-receiver/DSP/comparator_allnoises.png)
+![Comparitor without any noises](DSP/comparator_clean.png)
+![Comparator with All Noises](DSP/comparator_allnoises.png)
 
 
 ## Goertzel Algorithm Implementation
 
 If instead, connect the a microcontroller directly after the bandpass filter and use the microcontroller to apply the DFT to isolate the 38kHz signal using the Goertzel algorithm, it is achievable to decode the signal w/o any comparator subcircuit. 
 
-![Assumes microcontroller at output of bandpassfilter](ir-receiver/DSP/demo_goertzel_bpf_allnoises.png)
+![Assumes microcontroller at output of bandpassfilter](DSP/demo_goertzel_bpf_allnoises.png)
 
 The combination of the bandpassfilter and Goertzel implementation coorelating last N number of samples with 38kHz reference and reports amplitude every 64µs. 38kHz component adds up while other frequencies are averaged towards zero. The adaptive slice functions as a way to turn the signal on and off by adjusting the threshold in accordance with the formula:
 
