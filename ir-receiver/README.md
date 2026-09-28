@@ -126,6 +126,11 @@ Results from the final 'out' node given just the comparator.
 
 If instead, connect the a microcontroller directly after the bandpass filter and use the microcontroller to apply the DFT to isolate the 38kHz signal using the Goertzel algorithm, it is achievable to decode the signal w/o any comparator subcircuit. 
 
+fs = 500kSPS (min 2 x 38kHz)
+N = 128
+Hop = 32
+Bin = 9.73
+
 ![Assumes microcontroller at output of bandpassfilter](DSP/demo_goertzel_bpf_allnoises.png)
 
 The combination of the bandpassfilter and Goertzel implementation coorelating last N number of samples with 38kHz reference and reports amplitude every 64µs. 38kHz component adds up while other frequencies are averaged towards zero. The adaptive slice functions as a way to turn the signal on and off by adjusting the threshold in accordance with the formula:
