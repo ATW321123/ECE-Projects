@@ -128,6 +128,7 @@ If instead, connect the a microcontroller directly after the bandpass filter and
 
 fs = 500kSPS (min 2 x 38kHz)
 N = 128
+fr = 4kHz
 Hop = 32
 Bin = 9.73
 
