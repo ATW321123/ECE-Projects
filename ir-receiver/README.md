@@ -148,6 +148,13 @@ It keeps track of two levels:
 - **Loud level (peak):** how strong the signal reads when the remote *is* sending. It jumps up
   immediately when a burst arrives and fades slowly (over about 150 ms) afterwards.
 
+$$
+\text{threshold} = F + k\,(P - F), \qquad
+k = \begin{cases} 0.50 & \text{output off} \\ 0.35 & \text{output on} \end{cases}
+$$
+
+where **F** is the quiet level (floor) and **P** the loud level (peak). The output turns on
+when the Goertzel amplitude exceeds the threshold **and** $P > 4F$.
 The threshold sits between the two:
 
     threshold = quiet level + 50% of the gap between quiet and loud
