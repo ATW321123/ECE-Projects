@@ -113,6 +113,9 @@ built-in device noise (resistor, op-amp or photodiode shot noise); B1 stands in 
 
 ## Sim Results
 
+The Bandpass filter's gain (Vbf/Vtia), where Vtia is the voltage signal from the transimpedance amplifer effectively adds ~14.7 dB of gain at 37.6kHz. Other signals from the noise simulations all have less gain except for the 45kHz lamp signal. This explains why the pure analog to comparator chain is not sufficient in isolating the 38kHz, since the 45kHz signal is too near it.
+![Band-pass filter response plotted as frequency vs gain](docs/bandpass-ac-response.png)
+
 Different simulations running assuming a 38kHz signal strength of 20nA from photodiode. With no interference from other sources, the comparator decodes the frame cleanly. Adding room lights, flickers, and noise did not break it either. A 45kHz source however does and passes through the analog bandpass filter along with the 38kHz remote signal and results in a failure to decode.
 Results from the final 'out' node given just the comparator.
 ![Comparitor without any noises](DSP/comparator_clean.png)
