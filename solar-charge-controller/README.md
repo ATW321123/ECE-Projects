@@ -53,4 +53,4 @@ KiCad schematic and board in `pcb/`.
 - [ ] Zener tempco vs. lead-acid charge voltage tempco across temperature
 - [ ] Verify Vgs stays within spec over the full panel voltage range
 - [ ] Reverse-current path when the panel is dark
-- [ ] Bench measurement of actual trip points vs. simulated
+
