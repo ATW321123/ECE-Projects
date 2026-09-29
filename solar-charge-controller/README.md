@@ -24,18 +24,16 @@ loop is one comparator with positive feedback.
 
 ## Design decisions
 
-**Why hysteresis, and why ~0.4 V.** Without positive feedback the loop chatters:
-the comparator trips, the load changes, terminal voltage moves back across the
-threshold, and the switch oscillates. Panel output ripple makes this worse. The
-0.4 V window is the trade-off — wide enough that ripple can't walk the output back
-across the threshold, narrow enough that charge termination still lands close to
-14.4 V.
+**.4V hysteris** Without positive feedback:
+the comparator trips, load changes, terminal voltage moves back across the
+threshold, and switch oscillates. Panel output ripple makes this worse. The
+0.4 V window is the trade-off.
 
 **Why PMOS high-side.** Switching the positive rail keeps the battery negative
 terminal common with the rest of the system. Body diode orientation has to be
 checked so the panel can't backfeed when the switch is off.
 
-**Why a Zener reference.** Sets the trip point without a regulator. Open question
+**Why Zener reference.** Sets the trip point without a regulator. Open question
 is tempco — whether the Zener drift tracks the battery's charge-voltage temperature
 coefficient closely enough over the operating range.
 
